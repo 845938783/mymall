@@ -41,10 +41,10 @@ import FeatureView from "./childComps/FeatureView.vue";
 import TabControl from "../../components/content/tabControl/TabControl.vue";
 import GoodsList from "../../components/content/goods/GoodsList.vue";
 import Scroll from "../../components/common/scroll/Scroll.vue";
-import BackTop from "../../components/content/backTop/BackTop.vue";
 
 import { getHomeMultidata, getHomeGoods } from "network/home";
 import { debounce } from "common/utils.js";
+import { itemListenerMixin, BarTopMixin } from "common/mixin";
 
 export default {
   name: "Home",
@@ -56,8 +56,8 @@ export default {
     TabControl,
     GoodsList,
     Scroll,
-    BackTop,
   },
+  mixins: [itemListenerMixin, BarTopMixin],
   data() {
     return {
       banners: [],
@@ -84,7 +84,11 @@ export default {
     this.$refs.scroll.refresh();
   },
   deactivated() {
+    // 1。保存Y值
     this.saveY = this.$refs.scroll.getScrollY();
+
+    // 2.取消全局事件的监听
+    this.$bus.$off("itemImageLoad", this.itemImgListener);
   },
   created() {
     this.getHomeMultidata();
@@ -92,17 +96,9 @@ export default {
     this.getHomeGoods("new");
     this.getHomeGoods("pop");
     this.getHomeGoods("sell");
+    this.$toast.show(" 数据请求中,请稍后", 1500);
   },
-  mounted() {
-    // 1.图片加载完成的事件监听
-    const refresh = debounce(this.$refs.scroll.refresh, 200);
-    // 通过接收this.$bus.$emit 发出的事件 来每获取一张图片刷新一次页面滚动高度
-    this.$bus.$on("itemImageLoad", () => {
-      // refresh()  是scroll内部的   刷新
-
-      refresh();
-    });
-  },
+  mounted() {},
   methods: {
     /*
       事件监听相关方法
@@ -125,7 +121,6 @@ export default {
     },
     swiperImageLoad() {
       this.taboffsetTop = this.$refs.tabControl.$el.offsetTop;
-      console.log(this.taboffsetTop);
     },
     /*
       网络请求相关方法
@@ -141,6 +136,7 @@ export default {
       });
     },
     getHomeGoods(type) {
+      this.$toast.show("数据加载中...", 1000);
       const page = this.goods[type].page + 1;
       getHomeGoods(type, page).then((res) => {
         this.goods[type].list.push(...res.data.list);
@@ -149,9 +145,7 @@ export default {
         this.$refs.scroll.finishPullUp();
       });
     },
-    backClick() {
-      this.$refs.scroll.scrollto(0, 0, 500);
-    },
+
     // 加载跟多图片
     LoadMore() {
       this.getHomeGoods(this.currentType);
@@ -172,6 +166,7 @@ export default {
 <style scoped>
 #home {
   /* padding-top: 44px; */
+
   height: 100vh;
   position: relative;
 }

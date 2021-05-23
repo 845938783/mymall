@@ -12,7 +12,6 @@ Vue.use(VueRouter);
 const originalPush = VueRouter.prototype.push;
 
 VueRouter.prototype.push = function push(location) {
-  console.log("-----");
   return originalPush.call(this, location).catch((err) => err);
 };
 // 2.创建router

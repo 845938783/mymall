@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item" @click="itemClick1">
-    <img :src="goodsItem.show.img" alt="" @load="imageLoad" />
+    <img v-lazy="showImage" alt="" @load="imageLoad" />
     <div class="goods-info">
       <p>{{ goodsItem.title }}</p>
       <span class="price">{{ goodsItem.price }}</span>
@@ -22,6 +22,11 @@ export default {
   },
   data() {
     return {};
+  },
+  computed: {
+    showImage() {
+      return this.goodsItem.image || this.goodsItem.show.img;
+    },
   },
   methods: {
     // 将图片刷新  传出到事件总线    让this.$bus.$on去接收
